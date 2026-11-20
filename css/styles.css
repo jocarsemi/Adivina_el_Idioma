@@ -1,0 +1,220 @@
+/* ====== RESET & VARIABLES ====== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #1a1a1a;
+  --paper: #fdfaf3;
+  --c1: #ff6b6b; --c2: #4ecdc4; --c3: #ffd93d; --c4: #a06cd5;
+  --c5: #ff9f1c; --c6: #6bcf7f; --c7: #4d96ff; --c8: #ff6fb5;
+  --c9: #c9b6e4; --c10: #95e1d3;
+}
+body {
+  font-family: 'Patrick Hand', cursive;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 16px;
+}
+.hidden { display: none !important; }
+
+/* ====== TITULOS SKETCH ====== */
+.sketch-title {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(2rem, 6vw, 4rem);
+  text-align: center;
+  transform: rotate(-1.5deg);
+  text-shadow: 3px 3px 0 var(--c3), 6px 6px 0 rgba(0,0,0,.1);
+  margin: 12px 0;
+}
+.sketch-title.small { font-size: clamp(1.4rem, 3vw, 2rem); }
+.sketch-sub { text-align: center; font-size: 1.2rem; opacity: .8; margin-bottom: 16px; }
+
+/* ====== BOTONES SKETCH ====== */
+.sketch-btn {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  padding: 10px 18px;
+  border: 3px solid var(--ink);
+  border-radius: 14px 22px 16px 24px / 20px 14px 24px 16px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform .12s ease, box-shadow .12s ease;
+  transform: rotate(-1deg);
+}
+.sketch-btn:hover:not(:disabled) { transform: translate(-1px,-1px) rotate(1deg); box-shadow: 6px 6px 0 var(--ink); }
+.sketch-btn:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--ink); }
+.sketch-btn:disabled { opacity: .5; cursor: not-allowed; }
+.sketch-btn.big { font-size: 1.6rem; padding: 16px 30px; border-radius: 20px 28px 22px 30px / 26px 20px 30px 22px; }
+.sketch-btn.small { font-size: 1rem; padding: 6px 12px; }
+
+.color-a { background: var(--c1); } .color-b { background: var(--c2); }
+.color-c { background: var(--c3); } .color-d { background: var(--c4); }
+.color-e { background: var(--c5); } .color-f { background: var(--c6); }
+
+/* ====== HOME ====== */
+.home { display: grid; place-items: center; min-height: 100vh; }
+.home-wrap { text-align: center; max-width: 700px; }
+.home-buttons { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; margin-top: 32px; }
+
+/* ====== TOPBAR ====== */
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 16px;
+}
+.topbar h2 { font-family: 'Caveat', cursive; font-size: 2rem; }
+
+/* ====== PANEL ====== */
+.panel {
+  max-width: 1100px; margin: 0 auto;
+  background: #fff;
+  border: 3px dashed var(--ink);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,.15);
+}
+
+/* ====== INPUTS ====== */
+.sketch-input {
+  display: block; width: 100%;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.2rem;
+  padding: 10px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 12px 18px 14px 20px / 16px 12px 20px 14px;
+  background: #fffdf5;
+  margin: 10px 0;
+  outline: none;
+}
+.sketch-input:focus { background: #fff8e0; }
+
+/* ====== GRID IDIOMAS ====== */
+.lang-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 12px 0 24px;
+}
+.lang-chip {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1rem;
+  padding: 10px;
+  border: 3px dashed var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: transform .1s ease;
+  user-select: none;
+  transform: rotate(-0.5deg);
+}
+.lang-chip:hover { transform: rotate(0.5deg) scale(1.03); }
+.lang-chip.selected { border-style: solid; border-width: 4px; color: #fff; }
+.lang-chip.disabled { opacity: .3; pointer-events: none; }
+.lang-chip .emoji { font-size: 1.4rem; margin-right: 4px; }
+
+/* ====== CONFIG RONDAS ====== */
+.rounds-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 12px; margin-bottom: 24px; }
+.round-card {
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 12px;
+  background: #fffdf5;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.1);
+}
+.round-card h4 { font-family: 'Caveat', cursive; font-size: 1.4rem; margin-bottom: 8px; }
+.round-card select, .round-card input[type="text"], .round-card input[type="url"], .round-card input[type="file"] {
+  width: 100%; font-family: 'Patrick Hand', cursive; font-size: 1rem;
+  padding: 6px 10px; margin: 4px 0;
+  border: 2px solid var(--ink); border-radius: 10px; background: #fff;
+}
+
+/* ====== BANNER CÓDIGO ====== */
+.code-banner {
+  text-align: center; font-size: 1.4rem; margin-bottom: 12px;
+}
+.code {
+  font-family: 'Caveat', cursive;
+  font-size: 3rem; letter-spacing: 6px;
+  background: var(--c3); padding: 4px 16px;
+  border: 3px solid var(--ink); border-radius: 14px;
+  display: inline-block; transform: rotate(-1.5deg);
+}
+
+/* ====== CONTROL RONDA ====== */
+.round-control { text-align: center; margin: 24px 0; }
+.round-control h3 { font-family: 'Caveat', cursive; font-size: 2rem; margin-bottom: 12px; }
+.round-control .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+audio { width: 100%; max-width: 500px; margin: 8px auto; display: block; }
+
+/* ====== TABLA ====== */
+.sketch-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; margin-top: 12px; }
+.sketch-table th {
+  font-family: 'Caveat', cursive; font-size: 1.3rem; text-align: left; padding: 6px 10px;
+}
+.sketch-table td {
+  padding: 8px 10px; background: #fffdf5; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+}
+.sketch-table td:first-child { border-left: 2px solid var(--ink); border-radius: 12px 0 0 12px; }
+.sketch-table td:last-child { border-right: 2px solid var(--ink); border-radius: 0 12px 12px 0; }
+
+/* ====== RANKING ====== */
+.ranking-list { list-style: none; max-width: 600px; margin: 16px auto; }
+.ranking-list li {
+  font-size: 1.3rem; padding: 10px 16px; margin: 8px 0;
+  background: #fffdf5; border: 3px solid var(--ink); border-radius: 14px;
+  display: flex; justify-content: space-between;
+  transform: rotate(-0.4deg);
+}
+.ranking-list li:nth-child(even) { transform: rotate(0.6deg); }
+.winners-box {
+  text-align: center; font-family: 'Caveat', cursive;
+  font-size: 2.4rem; margin: 20px 0; color: #b8002e;
+}
+
+/* ====== BOTONES IDIOMA (ALUMNO) ====== */
+.lang-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.lang-btn {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.4rem;
+  padding: 20px 12px;
+  border: 4px dashed var(--ink);
+  border-radius: 18px 26px 20px 28px / 24px 18px 28px 20px;
+  background: #fff;
+  cursor: pointer;
+  transform: rotate(-1deg);
+  transition: transform .12s ease, box-shadow .12s ease;
+  color: var(--ink);
+}
+.lang-btn:nth-child(even) { transform: rotate(1deg); }
+.lang-btn:hover { transform: scale(1.04); }
+.lang-btn.selected {
+  border-style: solid;
+  box-shadow: 0 0 0 4px var(--ink), 6px 6px 0 rgba(0,0,0,.2);
+  animation: wiggle .35s ease;
+  color: #fff;
+}
+@keyframes wiggle {
+  0%,100% { transform: rotate(0deg) scale(1.04); }
+  25% { transform: rotate(-3deg) scale(1.06); }
+  75% { transform: rotate(3deg) scale(1.06); }
+}
+
+/* ====== MENSAJES ====== */
+.error { color: #b8002e; font-size: 1.2rem; text-align: center; margin-top: 8px; }
+.counter { text-align: center; font-size: 1.2rem; margin: 8px 0; }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 600px) {
+  .panel { padding: 16px; }
+  .sketch-btn.big { font-size: 1.2rem; padding: 12px 20px; }
+  .lang-btn { font-size: 1.1rem; padding: 14px 8px; }
+  .code { font-size: 2rem; }
+}
