@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alumno · Adivina el Idioma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="index.html" class="sketch-btn small">← Inicio</a>
+    <h2>Adivina el Idioma</h2>
+  </header>
+
+  <!-- FASE A: JOIN -->
+  <section id="phase-join" class="panel">
+    <h3 class="sketch-title small">Únete a la partida</h3>
+    <input id="join-code" class="sketch-input" maxlength="6" placeholder="CÓDIGO (6 letras)" style="text-transform:uppercase" />
+    <input id="join-name" class="sketch-input" placeholder="Tu nombre" />
+    <button id="join-btn" class="sketch-btn big color-b">Entrar 🎮</button>
+    <p id="join-error" class="error hidden"></p>
+  </section>
+
+  <!-- FASE B: LOBBY -->
+  <section id="phase-lobby" class="panel hidden">
+    <h2 class="sketch-title">Esperando al profesor…</h2>
+    <p class="sketch-sub">La partida comenzará en breve ⏳</p>
+  </section>
+
+  <!-- FASE C: JUEGO -->
+  <section id="phase-play" class="panel hidden">
+    <h3>Ronda <span id="round-num">1</span> / 10</h3>
+    <div id="audio-share" class="hidden">
+      <audio id="student-audio" controls></audio>
+    </div>
+    <div id="lang-buttons" class="lang-buttons"></div>
+    <button id="confirm-btn" class="sketch-btn big color-c" disabled>✅ Confirmar respuesta</button>
+    <p id="play-status" class="sketch-sub"></p>
+  </section>
+
+  <!-- FASE D: RESULTADOS -->
+  <section id="phase-results" class="panel hidden">
+    <h2 class="sketch-title">🏁 Fin de la partida</h2>
+    <div id="student-score" class="student-score"></div>
+    <div id="student-winners" class="winners-box"></div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script type="module" src="js/student.js"></script>
+</body>
+</html>

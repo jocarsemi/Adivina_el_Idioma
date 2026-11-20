@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profesor · Adivina el Idioma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="index.html" class="sketch-btn small">← Inicio</a>
+    <h2>Panel del Profesor</h2>
+  </header>
+
+  <!-- FASE A: CONFIGURACIÓN -->
+  <section id="phase-config" class="panel">
+    <h3 class="sketch-title small">1. Elige 10 idiomas de entre 50</h3>
+    <p class="counter">Seleccionados: <span id="lang-count">0</span> / 10</p>
+    <input id="lang-search" class="sketch-input" placeholder="🔍 Buscar idioma…" />
+    <div id="lang-grid" class="lang-grid"></div>
+
+    <h3 class="sketch-title small">2. Configura las 10 rondas</h3>
+    <div id="rounds-config" class="rounds-config"></div>
+
+    <button id="launch-btn" class="sketch-btn big color-c" disabled>🚀 Lanzar partida</button>
+  </section>
+
+  <!-- FASE B: CONTROL -->
+  <section id="phase-control" class="panel hidden">
+    <div class="code-banner">
+      Código de partida: <span id="game-code" class="code">------</span>
+    </div>
+    <p class="counter">Alumnos conectados: <span id="student-count">0</span></p>
+
+    <div class="round-control">
+      <h3>Ronda <span id="current-round-num">1</span> / 10</h3>
+      <audio id="teacher-audio" controls class="hidden"></audio>
+      <div class="row">
+        <button id="play-audio" class="sketch-btn color-d">▶ Reproducir audio</button>
+        <button id="next-round" class="sketch-btn color-e">➡ Siguiente ronda</button>
+        <button id="finish-game" class="sketch-btn color-f">🏁 Finalizar partida</button>
+      </div>
+    </div>
+
+    <h3 class="sketch-title small">Alumnos</h3>
+    <table class="sketch-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Estado</th>
+          <th>Puntos</th>
+        </tr>
+      </thead>
+      <tbody id="students-tbody"></tbody>
+    </table>
+  </section>
+
+  <!-- FASE C: RESULTADOS -->
+  <section id="phase-results" class="panel hidden">
+    <h2 class="sketch-title">🏆 ¡Resultados finales!</h2>
+    <div id="winners-box" class="winners-box"></div>
+    <ol id="ranking-list" class="ranking-list"></ol>
+    <button id="new-game-btn" class="sketch-btn big color-a">🔄 Nueva partida</button>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script type="module" src="js/teacher.js"></script>
+</body>
+</html>
