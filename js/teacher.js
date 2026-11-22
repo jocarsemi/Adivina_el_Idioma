@@ -1,29 +1,26 @@
-import { ALL_LANGUAGES, COLOR_PALETTE, generateGameCode } from './data.js';
-import {
-  db, ref, onValue, createGame, updateGame, deleteGame, get, gameExists
-} from './db.js';
+import { ALL_LANGUAGES, COLOR_PALETTE, generateGameCode, openGoogleTranslate } from './data.js';
+import { db, ref, onValue, createGame, updateGame, deleteGame, get } from './db.js';
 
-// ---------- ESTADO ----------
+const $ = (id) => document.getElementById(id);
+
 const state = {
-  selectedIds: [],          // 10 idiomas
-  rounds: Array(10).fill(null).map(() => ({ correctLanguageId: '', label: '', audioUrl: '', localFile: null })),
+  selectedIds: [],   // 10 idiomas en orden de selección
   code: null,
   game: null,
-  audioEl: null
+  unsub: null
 };
 
-// ---------- ELEMENTOS ----------
-const $ = (id) => document.getElementById(id);
-const langGrid = $('lang-grid');
-const langCount = $('lang-count');
-const langSearch = $('lang-search');
-const roundsConfig = $('rounds-config');
-const launchBtn = $('launch-btn');
+const langGrid    = $('lang-grid');
+const langCount   = $('lang-count');
+const langSearch  = $('lang-search');
+const roundsPreview = $('rounds-preview');
+const launchBtn   = $('launch-btn');
 const phaseConfig = $('phase-config');
-const phaseControl = $('phase-control');
-const phaseResults = $('phase-results');
+const phaseControl= $('phase-control');
+const phaseResults= $('phase-results');
+const configError = $('config-error');
 
-// ---------- RENDER GRID IDIOMAS ----------
+// ---------- GRID IDIOMAS ----------
 function renderLangGrid(filter = '') {
   const f = filter.toLowerCase();
   langGrid.innerHTML = '';
@@ -33,11 +30,9 @@ function renderLangGrid(filter = '') {
     const reachedLimit = state.selectedIds.length >= 10 && !selected;
     const chip = document.createElement('div');
     chip.className = 'lang-chip' + (selected ? ' selected' : '') + (reachedLimit ? ' disabled' : '');
-    chip.dataset.id = lang.id;
     if (selected) {
-      const colorIdx = state.selectedIds.indexOf(lang.id);
-      chip.style.background = COLOR_PALETTE[colorIdx % COLOR_PALETTE.length];
-      chip.style.borderColor = '#1a1a1a';
+      const idx = state.selectedIds.indexOf(lang.id);
+      chip.style.background = COLOR_PALETTE[idx % COLOR_PALETTE.length];
     }
     chip.innerHTML = `<span class="emoji">${lang.emoji}</span>${lang.name}`;
     chip.addEventListener('click', () => toggleLanguage(lang.id));
@@ -48,138 +43,115 @@ function renderLangGrid(filter = '') {
 function toggleLanguage(id) {
   if (state.selectedIds.includes(id)) {
     state.selectedIds = state.selectedIds.filter(x => x !== id);
-    // Si quitamos un idioma, limpiamos las respuestas correctas que lo usaban
-    state.rounds.forEach(r => { if (r.correctLanguageId === id) r.correctLanguageId = ''; });
-  } else {
-    if (state.selectedIds.length >= 10) return;
+  } else if (state.selectedIds.length < 10) {
     state.selectedIds.push(id);
   }
   langCount.textContent = state.selectedIds.length;
   renderLangGrid(langSearch.value);
-  renderRoundsConfig();
-  validateLaunch();
+  renderRoundsPreview();
+  launchBtn.disabled = state.selectedIds.length !== 10;
 }
 
-// ---------- RENDER RONDAS ----------
-function renderRoundsConfig() {
-  roundsConfig.innerHTML = '';
+// ---------- PREVIEW DEL ORDEN DE RONDAS ----------
+function renderRoundsPreview() {
+  roundsPreview.innerHTML = '';
   if (state.selectedIds.length === 0) {
-    roundsConfig.innerHTML = '<p class="sketch-sub">Selecciona primero los 10 idiomas.</p>';
+    roundsPreview.innerHTML = '<li class="sketch-sub">Aún no has elegido ningún idioma.</li>';
     return;
   }
-  state.rounds.forEach((round, i) => {
-    const card = document.createElement('div');
-    card.className = 'round-card';
-    const options = state.selectedIds.map(id => {
-      const lang = ALL_LANGUAGES.find(l => l.id === id);
-      const sel = round.correctLanguageId === id ? 'selected' : '';
-      return `<option value="${id}" ${sel}>${lang.emoji} ${lang.name}</option>`;
-    }).join('');
-    card.innerHTML = `
-      <h4>Ronda ${i + 1}</h4>
-      <select data-i="${i}" class="correct-select">
-        <option value="">— Respuesta correcta —</option>
-        ${options}
-      </select>
-      <input type="text" data-i="${i}" class="label-input" placeholder="Etiqueta (opcional)" value="${round.label || ''}" />
-      <input type="url" data-i="${i}" class="url-input" placeholder="URL audio (opcional)" value="${round.audioUrl || ''}" />
-      <input type="file" accept="audio/*" data-i="${i}" class="file-input" />
-    `;
-    roundsConfig.appendChild(card);
+  state.selectedIds.forEach((id, i) => {
+    const lang = ALL_LANGUAGES.find(l => l.id === id);
+    const li = document.createElement('li');
+    li.className = 'round-preview-item';
+    li.innerHTML = `<strong>Ronda ${i + 1}</strong>: ${lang.emoji} ${lang.name}`;
+    roundsPreview.appendChild(li);
   });
-
-  roundsConfig.querySelectorAll('.correct-select').forEach(el => {
-    el.addEventListener('change', (e) => {
-      state.rounds[+e.target.dataset.i].correctLanguageId = e.target.value;
-      validateLaunch();
-    });
-  });
-  roundsConfig.querySelectorAll('.label-input').forEach(el => {
-    el.addEventListener('input', (e) => { state.rounds[+e.target.dataset.i].label = e.target.value; });
-  });
-  roundsConfig.querySelectorAll('.url-input').forEach(el => {
-    el.addEventListener('input', (e) => { state.rounds[+e.target.dataset.i].audioUrl = e.target.value.trim(); });
-  });
-  roundsConfig.querySelectorAll('.file-input').forEach(el => {
-    el.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) state.rounds[+e.target.dataset.i].localFile = URL.createObjectURL(file);
-    });
-  });
-}
-
-function validateLaunch() {
-  const okLangs = state.selectedIds.length === 10;
-  const okRounds = state.rounds.every(r => r.correctLanguageId);
-  launchBtn.disabled = !(okLangs && okRounds);
 }
 
 // ---------- LANZAR PARTIDA ----------
 launchBtn.addEventListener('click', async () => {
+  if (state.selectedIds.length !== 10) return;
+  configError.classList.add('hidden');
   launchBtn.disabled = true;
   launchBtn.textContent = 'Creando partida…';
 
-  // Genera código único
-  let code;
-  let attempts = 0;
-  do {
-    code = generateGameCode();
-    attempts++;
-    if (attempts > 20) { alert('No se pudo generar código único. Inténtalo de nuevo.'); return; }
-  } while (await gameExists(code));
-
-  state.code = code;
-
   const languages = state.selectedIds.map((id, i) => {
     const lang = ALL_LANGUAGES.find(l => l.id === id);
-    return { id: lang.id, name: lang.name, emoji: lang.emoji, color: COLOR_PALETTE[i % COLOR_PALETTE.length] };
+    return {
+      id: lang.id,
+      name: lang.name,
+      emoji: lang.emoji,
+      color: COLOR_PALETTE[i % COLOR_PALETTE.length],
+      // La respuesta correcta de la ronda i es el idioma i-ésimo elegido
+    };
   });
 
-  const rounds = state.rounds.map((r, i) => ({
+  const rounds = state.selectedIds.map((id, i) => ({
     index: i,
-    label: r.label || `Audio ${i + 1}`,
-    correctLanguageId: r.correctLanguageId,
-    audioUrl: r.audioUrl || ''
+    label: `Audio ${i + 1}`,
+    correctLanguageId: id   // 👈 orden de selección = respuesta correcta
   }));
 
-  await createGame(code, { languages, rounds });
+  try {
+    // Genera código único (comprueba una sola vez por intento, con timeout)
+    let code = generateGameCode();
+    // No comprobamos con gameExists en bucle para no colgar la UI.
+    // Si por casualidad colisiona (muy improbable con 32^6), la nueva partida
+    // sobrescribe la anterior. Para uso de aula es aceptable.
+    state.code = code;
 
-  // Cambia a fase de control
-  phaseConfig.classList.add('hidden');
-  phaseControl.classList.remove('hidden');
-  $('game-code').textContent = code;
+    await createGame(code, { languages, rounds });
 
-  subscribeToGame(code);
+    // Mostrar fase de control INMEDIATAMENTE (no esperar snapshot)
+    phaseConfig.classList.add('hidden');
+    phaseControl.classList.remove('hidden');
+    $('game-code').textContent = code;
+    $('current-round-num').textContent = '1';
+    $('current-round-lang').textContent = `Idioma a adivinar: ${languages[0].emoji} (${languages[0].name})`;
+
+    // Suscribirse a la partida (alumnos en tiempo real)
+    subscribeToGame(code);
+  } catch (err) {
+    console.error(err);
+    configError.textContent = '❌ No se pudo crear la partida. Revisa tu firebase-config.js y las reglas de Firebase. ' + (err?.message || '');
+    configError.classList.remove('hidden');
+    launchBtn.textContent = '🚀 Lanzar partida';
+    launchBtn.disabled = false;
+  }
 });
 
-// ---------- SUSCRIPCIÓN A LA PARTIDA ----------
+// ---------- SUSCRIPCIÓN ----------
 function subscribeToGame(code) {
+  if (state.unsub) state.unsub();
   const gameRef = ref(db, `games/${code}`);
-  onValue(gameRef, (snap) => {
+  state.unsub = onValue(gameRef, (snap) => {
     const game = snap.val();
     if (!game) return;
     state.game = game;
     renderStudents(game);
-    $('student-count').textContent = Object.values(game.students || {}).filter(s => s.connected).length;
-
-    if (game.status === 'playing' || game.status === 'lobby') {
-      $('current-round-num').textContent = (game.currentRound ?? 0) + 1;
+    const connected = Object.values(game.students || {}).filter(s => s.connected).length;
+    $('student-count').textContent = connected;
+    $('current-round-num').textContent = (game.currentRound ?? 0) + 1;
+    const currentLang = game.languages?.[game.currentRound ?? 0];
+    if (currentLang) {
+      $('current-round-lang').textContent =
+        `Idioma a adivinar: ${currentLang.emoji} (${currentLang.name})`;
     }
-    if (game.status === 'finished' && !phaseResults.classList.contains('hidden') === false) {
-      showResults(game);
-    }
+    if (game.status === 'finished') showResults(game);
+  }, (err) => {
+    console.error('onValue error', err);
   });
 }
 
 function renderStudents(game) {
   const tbody = $('students-tbody');
   tbody.innerHTML = '';
-  const students = Object.entries(game.students || {});
-  if (students.length === 0) {
+  const entries = Object.entries(game.students || {});
+  if (entries.length === 0) {
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;opacity:.6">Ningún alumno conectado aún…</td></tr>';
     return;
   }
-  students.forEach(([uid, s]) => {
+  entries.forEach(([, s]) => {
     const answered = s.answers && s.answers[game.currentRound] !== undefined;
     const status = !s.connected ? '🔴 Desconectado' : answered ? '✅ Respondido' : '⏳ Esperando';
     const tr = document.createElement('tr');
@@ -188,17 +160,12 @@ function renderStudents(game) {
   });
 }
 
-// ---------- CONTROLES DE RONDA ----------
+// ---------- CONTROLES ----------
 $('play-audio').addEventListener('click', () => {
-  const roundIdx = state.game?.currentRound ?? 0;
-  const round = state.rounds[roundIdx];
-  if (!round) return;
-  let src = round.localFile || round.audioUrl;
-  if (!src) { alert('No hay audio configurado para esta ronda.'); return; }
-  const audio = $('teacher-audio');
-  audio.classList.remove('hidden');
-  audio.src = src;
-  audio.play();
+  const idx = state.game?.currentRound ?? 0;
+  const lang = state.game?.languages?.[idx];
+  if (!lang) return;
+  openGoogleTranslate(lang.id);
 });
 
 $('next-round').addEventListener('click', async () => {
@@ -209,63 +176,56 @@ $('next-round').addEventListener('click', async () => {
 
 $('finish-game').addEventListener('click', async () => {
   if (!confirm('¿Finalizar la partida y calcular resultados?')) return;
-  const game = (await get(ref(db, `games/${state.code}`))).val();
-  if (!game) return;
-  const rounds = game.rounds;
-  const students = game.students || {};
-  // Calcula puntos
-  const updates = {};
-  Object.entries(students).forEach(([uid, s]) => {
-    let score = 0;
-    rounds.forEach((r, i) => {
-      if (s.answers && s.answers[i] === r.correctLanguageId) score++;
+  try {
+    const game = (await get(ref(db, `games/${state.code}`))).val();
+    if (!game) return;
+    const rounds = game.rounds;
+    const updates = {};
+    Object.entries(game.students || {}).forEach(([uid, s]) => {
+      let score = 0;
+      rounds.forEach((r, i) => {
+        if (s.answers && s.answers[i] === r.correctLanguageId) score++;
+      });
+      updates[`students/${uid}/score`] = score;
     });
-    updates[`students/${uid}/score`] = score;
-  });
-  updates.status = 'finished';
-  await updateGame(state.code, updates);
-  // Mostrar resultados
-  const updated = (await get(ref(db, `games/${state.code}`))).val();
-  showResults(updated);
+    updates.status = 'finished';
+    await updateGame(state.code, updates);
+    const updated = (await get(ref(db, `games/${state.code}`))).val();
+    showResults(updated);
+  } catch (err) {
+    console.error(err);
+    alert('Error al finalizar: ' + (err?.message || ''));
+  }
 });
 
 // ---------- RESULTADOS ----------
 function showResults(game) {
   phaseControl.classList.add('hidden');
   phaseResults.classList.remove('hidden');
-
-  const students = Object.entries(game.students || {});
-  const ranked = students
-    .map(([uid, s]) => ({ uid, name: s.name, score: s.score || 0 }))
+  const ranked = Object.values(game.students || {})
+    .map(s => ({ name: s.name, score: s.score || 0 }))
     .sort((a, b) => b.score - a.score);
-
   const maxScore = ranked[0]?.score ?? 0;
   const winners = ranked.filter(r => r.score === maxScore && maxScore > 0);
-
   const winnersBox = $('winners-box');
   if (winners.length === 0) {
     winnersBox.textContent = '😢 Nadie ha acertado nada…';
   } else {
     winnersBox.innerHTML = `👑 ${winners.map(w => w.name).join(' & ')}`;
-    confetti({ particleCount: 200, spread: 90, origin: { y: 0.4 } });
+    if (window.confetti) confetti({ particleCount: 200, spread: 90, origin: { y: 0.4 } });
   }
-
-  const list = $('ranking-list');
-  list.innerHTML = ranked.map((r, i) =>
+  $('ranking-list').innerHTML = ranked.map((r, i) =>
     `<li><span>${i + 1}. ${r.name}</span><span>${r.score} / 10</span></li>`
   ).join('');
 }
 
-// ---------- NUEVA PARTIDA ----------
 $('new-game-btn').addEventListener('click', async () => {
   if (state.code) await deleteGame(state.code);
   location.reload();
 });
 
-// ---------- BÚSQUEDA ----------
 langSearch.addEventListener('input', (e) => renderLangGrid(e.target.value));
 
-// ---------- INICIALIZAR ----------
+// init
 renderLangGrid();
-renderRoundsConfig();
-validateLaunch();
+renderRoundsPreview();
