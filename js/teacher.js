@@ -4,23 +4,23 @@ import { db, ref, onValue, createGame, updateGame, deleteGame, get } from './db.
 const $ = (id) => document.getElementById(id);
 
 const state = {
-  selectedIds: [],   // 10 idiomas en orden de selección
+  selectedIds: [],
   code: null,
   game: null,
   unsub: null
 };
 
-const langGrid    = $('lang-grid');
-const langCount   = $('lang-count');
-const langSearch  = $('lang-search');
+const langGrid      = $('lang-grid');
+const langCount     = $('lang-count');
+const langSearch    = $('lang-search');
 const roundsPreview = $('rounds-preview');
-const launchBtn   = $('launch-btn');
-const phaseConfig = $('phase-config');
-const phaseControl= $('phase-control');
-const phaseResults= $('phase-results');
-const configError = $('config-error');
+const launchBtn     = $('launch-btn');
+const phaseConfig   = $('phase-config');
+const phaseControl  = $('phase-control');
+const phaseResults  = $('phase-results');
+const configError   = $('config-error');
 
-// ---------- GRID IDIOMAS ----------
+// ---------- RENDER GRID ----------
 function renderLangGrid(filter = '') {
   const f = filter.toLowerCase();
   langGrid.innerHTML = '';
@@ -40,19 +40,51 @@ function renderLangGrid(filter = '') {
   });
 }
 
+// ---------- TOGGLE ----------
 function toggleLanguage(id) {
-  if (state.selectedIds.includes(id)) {
-    state.selectedIds = state.selectedIds.filter(x => x !== id);
-  } else if (state.selectedIds.length < 10) {
-    state.selectedIds.push(id);
+  try {
+    if (state.selectedIds.includes(id)) {
+      state.selectedIds = state.selectedIds.filter(x => x !== id);
+    } else if (state.selectedIds.length < 10) {
+      state.selectedIds.push(id);
+    }
+  } catch (e) {
+    console.error('toggleLanguage error', e);
   }
-  langCount.textContent = state.selectedIds.length;
-  renderLangGrid(langSearch.value);
-  renderRoundsPreview();
-  launchBtn.disabled = state.selectedIds.length !== 10;
+  refreshUI();
 }
 
-// ---------- PREVIEW DEL ORDEN DE RONDAS ----------
+// ---------- REFRESCO CENTRALIZADO ----------
+function refreshUI() {
+  // Contador
+  langCount.textContent = state.selectedIds.length;
+
+  // Grid
+  renderLangGrid(langSearch.value);
+
+  // Preview
+  try {
+    renderRoundsPreview();
+  } catch (e) {
+    console.error('renderRoundsPreview error', e);
+  }
+
+  // Botón lanzar
+  const n = state.selectedIds.length;
+  if (n === 10) {
+    launchBtn.disabled = false;
+    launchBtn.textContent = '🚀 Lanzar partida';
+  } else {
+    launchBtn.disabled = true;
+    launchBtn.textContent = `🚀 Lanzar partida (faltan ${10 - n})`;
+  }
+
+  // Botón vaciar
+  const clearBtn = $('clear-btn');
+  if (clearBtn) clearBtn.style.display = n > 0 ? 'inline-block' : 'none';
+}
+
+// ---------- PREVIEW ----------
 function renderRoundsPreview() {
   roundsPreview.innerHTML = '';
   if (state.selectedIds.length === 0) {
@@ -61,6 +93,7 @@ function renderRoundsPreview() {
   }
   state.selectedIds.forEach((id, i) => {
     const lang = ALL_LANGUAGES.find(l => l.id === id);
+    if (!lang) return;
     const li = document.createElement('li');
     li.className = 'round-preview-item';
     li.innerHTML = `<strong>Ronda ${i + 1}</strong>: ${lang.emoji} ${lang.name}`;
@@ -68,7 +101,7 @@ function renderRoundsPreview() {
   });
 }
 
-// ---------- LANZAR PARTIDA ----------
+// ---------- LANZAR ----------
 launchBtn.addEventListener('click', async () => {
   if (state.selectedIds.length !== 10) return;
   configError.classList.add('hidden');
@@ -81,39 +114,36 @@ launchBtn.addEventListener('click', async () => {
       id: lang.id,
       name: lang.name,
       emoji: lang.emoji,
-      color: COLOR_PALETTE[i % COLOR_PALETTE.length],
-      // La respuesta correcta de la ronda i es el idioma i-ésimo elegido
+      color: COLOR_PALETTE[i % COLOR_PALETTE.length]
     };
   });
 
   const rounds = state.selectedIds.map((id, i) => ({
     index: i,
     label: `Audio ${i + 1}`,
-    correctLanguageId: id   // 👈 orden de selección = respuesta correcta
+    correctLanguageId: id
   }));
 
   try {
-    // Genera código único (comprueba una sola vez por intento, con timeout)
-    let code = generateGameCode();
-    // No comprobamos con gameExists en bucle para no colgar la UI.
-    // Si por casualidad colisiona (muy improbable con 32^6), la nueva partida
-    // sobrescribe la anterior. Para uso de aula es aceptable.
+    const code = generateGameCode();
     state.code = code;
 
     await createGame(code, { languages, rounds });
 
-    // Mostrar fase de control INMEDIATAMENTE (no esperar snapshot)
+    // Mostrar control de inmediato
     phaseConfig.classList.add('hidden');
     phaseControl.classList.remove('hidden');
     $('game-code').textContent = code;
     $('current-round-num').textContent = '1';
-    $('current-round-lang').textContent = `Idioma a adivinar: ${languages[0].emoji} (${languages[0].name})`;
+    $('current-round-lang').textContent =
+      `Idioma a adivinar: ${languages[0].emoji} (${languages[0].name})`;
 
-    // Suscribirse a la partida (alumnos en tiempo real)
     subscribeToGame(code);
   } catch (err) {
     console.error(err);
-    configError.textContent = '❌ No se pudo crear la partida. Revisa tu firebase-config.js y las reglas de Firebase. ' + (err?.message || '');
+    configError.textContent =
+      '❌ No se pudo crear la partida. Revisa tu firebase-config.js y las reglas de Firebase. ' +
+      (err?.message || '');
     configError.classList.remove('hidden');
     launchBtn.textContent = '🚀 Lanzar partida';
     launchBtn.disabled = false;
@@ -138,9 +168,7 @@ function subscribeToGame(code) {
         `Idioma a adivinar: ${currentLang.emoji} (${currentLang.name})`;
     }
     if (game.status === 'finished') showResults(game);
-  }, (err) => {
-    console.error('onValue error', err);
-  });
+  }, (err) => console.error('onValue error', err));
 }
 
 function renderStudents(game) {
@@ -179,11 +207,10 @@ $('finish-game').addEventListener('click', async () => {
   try {
     const game = (await get(ref(db, `games/${state.code}`))).val();
     if (!game) return;
-    const rounds = game.rounds;
     const updates = {};
     Object.entries(game.students || {}).forEach(([uid, s]) => {
       let score = 0;
-      rounds.forEach((r, i) => {
+      game.rounds.forEach((r, i) => {
         if (s.answers && s.answers[i] === r.correctLanguageId) score++;
       });
       updates[`students/${uid}/score`] = score;
@@ -224,8 +251,14 @@ $('new-game-btn').addEventListener('click', async () => {
   location.reload();
 });
 
+// ---------- EVENTOS ----------
 langSearch.addEventListener('input', (e) => renderLangGrid(e.target.value));
 
-// init
-renderLangGrid();
-renderRoundsPreview();
+$('clear-btn').addEventListener('click', () => {
+  state.selectedIds = [];
+  langSearch.value = '';
+  refreshUI();
+});
+
+// ---------- INIT ----------
+refreshUI();
