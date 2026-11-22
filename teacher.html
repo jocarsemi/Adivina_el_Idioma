@@ -16,14 +16,16 @@
 
   <!-- FASE A: CONFIGURACIÓN -->
   <section id="phase-config" class="panel">
-    <h3 class="sketch-title small">1. Elige 10 idiomas de entre 50</h3>
+    <h3 class="sketch-title small">Elige 10 idiomas de entre 50</h3>
+    <p class="sketch-sub">El orden en que los elijas será el orden de las rondas y sus respuestas correctas.</p>
     <p class="counter">Seleccionados: <span id="lang-count">0</span> / 10</p>
     <input id="lang-search" class="sketch-input" placeholder="🔍 Buscar idioma…" />
     <div id="lang-grid" class="lang-grid"></div>
 
-    <h3 class="sketch-title small">2. Configura las 10 rondas</h3>
-    <div id="rounds-config" class="rounds-config"></div>
+    <h3 class="sketch-title small">Orden de las rondas (respuestas correctas)</h3>
+    <ol id="rounds-preview" class="rounds-preview"></ol>
 
+    <p id="config-error" class="error hidden"></p>
     <button id="launch-btn" class="sketch-btn big color-c" disabled>🚀 Lanzar partida</button>
   </section>
 
@@ -36,9 +38,9 @@
 
     <div class="round-control">
       <h3>Ronda <span id="current-round-num">1</span> / 10</h3>
-      <audio id="teacher-audio" controls class="hidden"></audio>
+      <p id="current-round-lang" class="sketch-sub"></p>
       <div class="row">
-        <button id="play-audio" class="sketch-btn color-d">▶ Reproducir audio</button>
+        <button id="play-audio" class="sketch-btn color-d">▶ Reproducir en Google Translate</button>
         <button id="next-round" class="sketch-btn color-e">➡ Siguiente ronda</button>
         <button id="finish-game" class="sketch-btn color-f">🏁 Finalizar partida</button>
       </div>
@@ -47,11 +49,7 @@
     <h3 class="sketch-title small">Alumnos</h3>
     <table class="sketch-table">
       <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Estado</th>
-          <th>Puntos</th>
-        </tr>
+        <tr><th>Nombre</th><th>Estado</th><th>Puntos</th></tr>
       </thead>
       <tbody id="students-tbody"></tbody>
     </table>
