@@ -235,3 +235,41 @@ audio { width: 100%; max-width: 500px; margin: 8px auto; display: block; }
   .lang-btn { font-size: 1.1rem; padding: 14px 8px; }
   .code { font-size: 2rem; }
 }
+
+/* Contador destacado */
+.counter {
+  text-align: center;
+  font-size: 1.3rem;
+  margin: 8px 0 12px;
+}
+.counter #lang-count {
+  font-family: 'Caveat', cursive;
+  font-size: 2rem;
+  color: #b8002e;
+  padding: 0 6px;
+}
+
+/* Preview del orden de rondas */
+.rounds-preview {
+  list-style: none;
+  max-width: 600px;
+  margin: 12px auto 24px;
+  padding: 0;
+}
+.round-preview-item {
+  font-size: 1.2rem;
+  padding: 8px 14px;
+  margin: 6px 0;
+  background: #fffdf5;
+  border: 2px dashed var(--ink);
+  border-radius: 12px;
+  transform: rotate(-0.4deg);
+}
+.round-preview-item:nth-child(even) { transform: rotate(0.4deg); }
+
+/* Botón lanzar con feedback claro cuando faltan idiomas */
+#launch-btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  filter: grayscale(.3);
+}
