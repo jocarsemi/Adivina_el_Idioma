@@ -207,6 +207,23 @@ audio { width: 100%; max-width: 500px; margin: 8px auto; display: block; }
   75% { transform: rotate(3deg) scale(1.06); }
 }
 
+/* Preview del orden de rondas */
+.rounds-preview {
+  list-style: none;
+  max-width: 600px;
+  margin: 12px auto 24px;
+}
+.round-preview-item {
+  font-size: 1.2rem;
+  padding: 8px 14px;
+  margin: 6px 0;
+  background: #fffdf5;
+  border: 2px dashed var(--ink);
+  border-radius: 12px;
+  transform: rotate(-0.4deg);
+}
+.round-preview-item:nth-child(even) { transform: rotate(0.4deg); }
+
 /* ====== MENSAJES ====== */
 .error { color: #b8002e; font-size: 1.2rem; text-align: center; margin-top: 8px; }
 .counter { text-align: center; font-size: 1.2rem; margin: 8px 0; }
